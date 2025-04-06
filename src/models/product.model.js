@@ -14,7 +14,8 @@ const productSchema = new Schema({
         required: true
     },
     category: { 
-         type: String,
+         type: mongoose.Schema.Types.ObjectId,
+         ref: "Category",
          required: true 
     },
     images: 
@@ -24,7 +25,7 @@ const productSchema = new Schema({
     stock: {
         type: Number,
         required: true,
-        deafault: 1
+        default: 1
     },
     seller: {
         type: mongoose.Schema.Types.ObjectId,

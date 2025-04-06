@@ -17,12 +17,17 @@ const userSchema = new Schema(
         type: String,
         required: true
       },
+      avatar: {
+       type: String,
+       default: ""
+      },
       role: {
         type: String,
         enum: ["buyer", "seller"],default: "buyer"
       },
       address: {
-        type: String
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Address"
       },
       phone: {
         type: String,
