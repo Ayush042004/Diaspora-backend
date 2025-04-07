@@ -1,11 +1,12 @@
 import { User } from "../models/user.model";
 import jwt from "jsonwebtoken"
+import {uploadOnCloudinary} from "../utils/cloudinary.js";
 
  export const generateAccessAndRefereshTokens = async(UserId)=> {
     try{
         const user = await User.findById(UserId);
-        const accessToken = User.generateAccessToken();
-        const refreshToken = User.genrateRefreshToken();
+        const accessToken =  await User.generateAccessToken();
+        const refreshToken =  await User.generateRefreshToken();
 
         user.refreshToken = refreshToken
         await user.save({validateBeforeSave: false})
@@ -106,13 +107,13 @@ export const loginUser = async(req,res) => {
 
     } catch(error){
         console.log("Error while logging in the user",error.message)
-       throw new Error("Error while logging in the user",error)
+       throw new Error("Error while logging in the user")
     }
 }
 
 export const logoutUser = async(req,res)=>{
     User.findByIdAndUpdate(
-        req.user._id,
+        req.user?._id,
         {
             $unset: {
                 refreshToken: 1
@@ -201,10 +202,66 @@ export const changeCurrentPassword = async(req,res)=>{
             )
 }
 export const getCurrentUser = async(req,res)=>{
+
+    const user = await User.findById(req.user?._id)
+                           .select("-password -refreshToken")
+                           .populate("address");
+
     return res
             .status(200)
             .json({
-                user: req.user,
-                message:"Current user fetched successfully"
+                user,
+                message:"Current user fetched successfully with address"
             })
+}
+
+export const updateUserProfile = async(req, res) => {
+    try{
+        const userId = req.user?._id;
+        const {name,email,phone,address} = req.body;
+
+        if(!name || !email || !phone || !address){
+            throw new Error("Please fill in all fields")
+        }
+        
+        
+        const avatarLocalPath = req.file?.path;
+        if(!avatarLocalPath){
+            throw new Error("Please upload an avatar");
+        }
+        
+
+        if(avatarLocalPath){
+            
+            const avatar = await uploadOnCloudinary(avatarLocalPath);
+            if(!avatar?.url) {
+                throw new Error("Error while uploading avatar");
+            }
+            
+        }
+      
+    const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    address: address,
+                    avatar: avatar.url
+                }
+            },
+            {new: true}
+        ).select("-password -role")
+
+        return res 
+        .status(200)
+        .json({
+             message:"Account details updated successfully",
+             user : updatedUser,
+        });
+
+    } catch(err) {
+        throw new Error("Error while updating user profile")
+    }
 }
