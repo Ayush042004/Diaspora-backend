@@ -7,7 +7,7 @@ import {
     deleteProduct
 } from "../controllers/product.controller.js"
 import { verifyJWT } from "../middlewares/verifyJWT.middleware.js";
-import upload from "../middlewares/multer.middleware.js"
+import {upload} from "../middlewares/multer.middleware.js"
 
 const router = Router();
 
